@@ -4,6 +4,9 @@
 
 #include <fmt/format.h>
 #include <Poco/JSON/Parser.h>
+#include <Poco/Net/SSLManager.h>
+#include <Poco/Net/AcceptCertificateHandler.h>
+#include <Poco/Net/RejectCertificateHandler.h>
 
 #include <framework/MicroServiceFuncs.h>
 #include <framework/utils.h>
@@ -29,6 +32,15 @@ namespace OpenWifi {
 			Level_ = Poco::Net::Context::VERIFY_RELAXED;
 		} else if (L == "once")
 			Level_ = Poco::Net::Context::VERIFY_ONCE;
+
+		if (Level_ == Poco::Net::Context::VERIFY_NONE) {
+			Poco::SharedPtr<Poco::Net::InvalidCertificateHandler> pCertHandler =
+				new Poco::Net::AcceptCertificateHandler(false);
+			Poco::Net::Context::Ptr pContext = new Poco::Net::Context(
+				Poco::Net::Context::CLIENT_USE, "", "", "", Poco::Net::Context::VERIFY_NONE, 9, false);
+			Poco::Net::SSLManager::instance().initializeClient(nullptr, pCertHandler, pContext);
+		}
+
 		Worker_.start(*this);
 		return 0;
 	}

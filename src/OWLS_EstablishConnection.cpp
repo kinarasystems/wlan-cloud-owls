@@ -4,6 +4,9 @@
 
 #include <fmt/format.h>
 #include <Poco/NObserver.h>
+#include <Poco/Net/SSLManager.h>
+#include <Poco/Net/AcceptCertificateHandler.h>
+#include <Poco/Net/SecureStreamSocket.h>
 
 #include "OWLSclient.h"
 #include "SimulationRunner.h"
@@ -12,6 +15,8 @@
 #include "OWLSclientEvents.h"
 
 namespace OpenWifi::OWLSClientEvents {
+
+    static int always_accept_cert(int, X509_STORE_CTX *) { return 1; }
 
     void EstablishConnection( const std::shared_ptr<OWLSclient> &Client, SimulationRunner *Runner) {
         if(!Runner->Running()) {
@@ -24,7 +29,8 @@ namespace OpenWifi::OWLSClientEvents {
 
         Runner->Report().ev_establish_connection++;
 
-        P.verificationMode = Poco::Net::Context::VERIFY_STRICT;
+        auto level = SimulationCoordinator()->GetLevel();
+        P.verificationMode = Poco::Net::Context::VerificationMode(level);
         P.verificationDepth = 9;
         P.caLocation = SimulationCoordinator()->GetCasLocation();
         P.loadDefaultCAs = false;
@@ -42,7 +48,7 @@ namespace OpenWifi::OWLSClientEvents {
 
         Context->addCertificateAuthority(Root);
 
-        if (SimulationCoordinator()->GetLevel() == Poco::Net::Context::VERIFY_STRICT) {
+        if (level == Poco::Net::Context::VERIFY_STRICT) {
         }
 
         Poco::Crypto::RSAKey Key("", SimulationCoordinator()->GetKeyFileName(), "");
@@ -54,10 +60,20 @@ namespace OpenWifi::OWLSClientEvents {
                                                    SimulationCoordinator()->GetKeyFileName()));
         }
 
-        if (SimulationCoordinator()->GetLevel() == Poco::Net::Context::VERIFY_STRICT) {
+        SSL_CTX_set_verify(SSLCtx, SSL_VERIFY_NONE, always_accept_cert);
+        Context->enableExtendedCertificateVerification(false);
+
+        if (level == Poco::Net::Context::VERIFY_STRICT) {
         }
 
-        Poco::Net::HTTPSClientSession Session(uri.getHost(), uri.getPort(), Context);
+        Client->Logger_.information(fmt::format("EstablishConnection({}): security level={}", Client->SerialNumber_, level));
+
+        Poco::Net::SecureStreamSocket sock(Context);
+        sock.setLazyHandshake(true);
+        sock.connect(Poco::Net::SocketAddress(uri.getHost(), uri.getPort()));
+        sock.setPeerHostName("");
+        sock.completeHandshake();
+        Poco::Net::HTTPClientSession Session(sock);
         Poco::Net::HTTPRequest Request(Poco::Net::HTTPRequest::HTTP_GET, "/?encoding=text",
                                        Poco::Net::HTTPMessage::HTTP_1_1);
         Request.set("origin", "http://www.websocket.org");

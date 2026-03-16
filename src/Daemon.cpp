@@ -7,6 +7,7 @@
 //
 
 #include <Poco/Net/SSLManager.h>
+#include <Poco/Net/AcceptCertificateHandler.h>
 #include <framework/UI_WebSocketClientServer.h>
 
 #include "Daemon.h"
@@ -41,6 +42,9 @@ int main(int argc, char **argv) {
 	int ExitCode;
 	try {
 		Poco::Net::SSLManager::instance().initializeServer(nullptr, nullptr, nullptr);
+		Poco::SharedPtr<Poco::Net::InvalidCertificateHandler> pAcceptHandler =
+			new Poco::Net::AcceptCertificateHandler(false);
+		Poco::Net::SSLManager::instance().initializeClient(nullptr, pAcceptHandler, nullptr);
 		auto App = OpenWifi::Daemon::instance();
 		ExitCode = App->run(argc, argv);
 		Poco::Net::SSLManager::instance().shutdown();

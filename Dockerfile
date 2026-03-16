@@ -19,6 +19,10 @@ ADD https://api.github.com/repos/Telecominfraproject/wlan-cloud-lib-poco/git/ref
 RUN git clone https://github.com/Telecominfraproject/wlan-cloud-lib-poco --branch ${POCO_VERSION} /poco
 
 WORKDIR /poco
+# Patch: disable hostname verification by replacing the error return with OK
+RUN echo "=== BEFORE PATCH ===" && grep -n 'APPLICATION_VERIFICATION\|X509_V_OK' NetSSL_OpenSSL/src/SecureSocketImpl.cpp
+RUN sed -i 's/X509_V_ERR_APPLICATION_VERIFICATION/X509_V_OK/g' NetSSL_OpenSSL/src/SecureSocketImpl.cpp
+RUN echo "=== AFTER PATCH ===" && grep -n 'APPLICATION_VERIFICATION\|X509_V_OK' NetSSL_OpenSSL/src/SecureSocketImpl.cpp
 RUN mkdir cmake-build
 WORKDIR cmake-build
 RUN cmake ..
@@ -58,6 +62,7 @@ FROM build-base AS owls-build
 ADD CMakeLists.txt build /owls/
 ADD cmake /owls/cmake
 ADD src /owls/src
+RUN echo "=== OWLS SOURCE CHECK ===" && grep -n 'EstablishConnection.*security level\|HTTPClientSession\|HTTPSClientSession' /owls/src/OWLS_EstablishConnection.cpp
 ADD .git /owls/.git
 
 COPY --from=poco-build /usr/local/include /usr/local/include

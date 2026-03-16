@@ -1,0 +1,8 @@
+{
+  "name": "loadsim1",
+  "deviceType": "edgecore_ecw5410",
+  "devices": 5,
+  "gateway": "https://owls.kinsights.io:15002",
+  "macPrefix": "030000",
+  "simulationLength": 600
+}
