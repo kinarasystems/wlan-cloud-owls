@@ -43,7 +43,7 @@ SIM_ID=$(./create_sim.sh sample_data/simulation.json)
 
 Edit `sample_data/simulation.json` to adjust the simulation parameters before running.
 
-**Step 3 — Start the simulation:**
+**Step 2 — Start the simulation:**
 
 ```bash
 RUNNING_ID=$(./start_sim.sh $SIM_ID)
@@ -59,5 +59,11 @@ RUNNING_ID=$(./start_sim.sh $SIM_ID)
 
 ```bash
 ./stop_sim.sh $SIM_ID $RUNNING_ID
+```
+
+**Delete simulation definition:**
+
+```bash
+./delete_sim.sh $SIM_ID
 ```
 
