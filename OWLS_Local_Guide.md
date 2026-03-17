@@ -12,6 +12,7 @@ This document covers how to compile, deploy, and run simulations with OWLS (Open
    - `key.pem` -> `device-key.pem`
    - `root.pem` -> `root.pem`
 3. Place files in the `certs/` directory of your OWLS data folder.
+4. Create `certs/cas/` directory.
 
 ## 2. Compiling OWLS
 

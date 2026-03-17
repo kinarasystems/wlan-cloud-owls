@@ -16,4 +16,12 @@ RESPONSE=$(curl -sk -X POST "https://localhost:17007/api/v1/simulation/0" \
     -H "Content-Type: application/json" \
     -d "@$JSON_FILE")
 
-echo "$RESPONSE" | python3 -c "import sys,json; print(json.loads(sys.stdin.read())['id'])"
+echo "$RESPONSE" | python3 -c "
+import sys, json
+r = json.loads(sys.stdin.read())
+if 'id' in r:
+    print(r['id'])
+else:
+    print('Error: ' + json.dumps(r), file=sys.stderr)
+    sys.exit(1)
+"

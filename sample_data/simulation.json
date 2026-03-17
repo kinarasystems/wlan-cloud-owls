@@ -6,7 +6,7 @@
   "macPrefix": "030000",
   "simulationLength": 600,
   "minAssociations": 3,
-  "maxAssociations": 30,
+  "maxAssociations": 16,
   "minClients": 3,
   "maxClients": 15
 }

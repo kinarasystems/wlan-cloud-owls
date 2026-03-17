@@ -23,68 +23,63 @@ namespace OpenWifi::OWLSClientEvents {
             return;
         }
 
-        Poco::URI uri(Runner->Details().gateway);
-
-        Poco::Net::Context::Params P;
-
         Runner->Report().ev_establish_connection++;
-
-        auto level = SimulationCoordinator()->GetLevel();
-        P.verificationMode = Poco::Net::Context::VerificationMode(level);
-        P.verificationDepth = 9;
-        P.caLocation = SimulationCoordinator()->GetCasLocation();
-        P.loadDefaultCAs = false;
-        P.certificateFile = SimulationCoordinator()->GetCertFileName();
-        P.privateKeyFile = SimulationCoordinator()->GetKeyFileName();
-        P.cipherList = "ALL:!ADH:!LOW:!EXP:!MD5:@STRENGTH";
-        P.dhUse2048Bits = true;
-
-        auto Context = new Poco::Net::Context(Poco::Net::Context::CLIENT_USE, P);
-        Poco::Crypto::X509Certificate Cert(SimulationCoordinator()->GetCertFileName());
-        Poco::Crypto::X509Certificate Root(SimulationCoordinator()->GetRootCAFileName());
-
-        Context->useCertificate(Cert);
-        Context->addChainCertificate(Root);
-
-        Context->addCertificateAuthority(Root);
-
-        if (level == Poco::Net::Context::VERIFY_STRICT) {
-        }
-
-        Poco::Crypto::RSAKey Key("", SimulationCoordinator()->GetKeyFileName(), "");
-        Context->usePrivateKey(Key);
-
-        SSL_CTX *SSLCtx = Context->sslContext();
-        if (!SSL_CTX_check_private_key(SSLCtx)) {
-            poco_error(Client->Logger_,fmt::format("Wrong Certificate: {} for {}",SimulationCoordinator()->GetCertFileName() ,
-                                                   SimulationCoordinator()->GetKeyFileName()));
-        }
-
-        SSL_CTX_set_verify(SSLCtx, SSL_VERIFY_NONE, always_accept_cert);
-        Context->enableExtendedCertificateVerification(false);
-
-        if (level == Poco::Net::Context::VERIFY_STRICT) {
-        }
-
-        Client->Logger_.information(fmt::format("EstablishConnection({}): security level={}", Client->SerialNumber_, level));
-
-        Poco::Net::SecureStreamSocket sock(Context);
-        sock.setLazyHandshake(true);
-        sock.connect(Poco::Net::SocketAddress(uri.getHost(), uri.getPort()));
-        sock.setPeerHostName("");
-        sock.completeHandshake();
-        Poco::Net::HTTPClientSession Session(sock);
-        Poco::Net::HTTPRequest Request(Poco::Net::HTTPRequest::HTTP_GET, "/?encoding=text",
-                                       Poco::Net::HTTPMessage::HTTP_1_1);
-        Request.set("origin", "http://www.websocket.org");
-        Poco::Net::HTTPResponse Response;
-
-        std::lock_guard ClientGuard(Client->Mutex_);
-
-        Client->Logger_.information(fmt::format("Connecting({}): host={} port={}", Client->SerialNumber_,
-                                        uri.getHost(), uri.getPort()));
+        Client->Logger_.information(fmt::format("EstablishConnection({}): attempting connection", Client->SerialNumber_));
 
         try {
+            Poco::URI uri(Runner->Details().gateway);
+
+            Poco::Net::Context::Params P;
+
+            auto level = SimulationCoordinator()->GetLevel();
+            P.verificationMode = Poco::Net::Context::VerificationMode(level);
+            P.verificationDepth = 9;
+            P.caLocation = SimulationCoordinator()->GetCasLocation();
+            P.loadDefaultCAs = false;
+            P.certificateFile = SimulationCoordinator()->GetCertFileName();
+            P.privateKeyFile = SimulationCoordinator()->GetKeyFileName();
+            P.cipherList = "ALL:!ADH:!LOW:!EXP:!MD5:@STRENGTH";
+            P.dhUse2048Bits = true;
+
+            auto Context = new Poco::Net::Context(Poco::Net::Context::CLIENT_USE, P);
+            Poco::Crypto::X509Certificate Cert(SimulationCoordinator()->GetCertFileName());
+            Poco::Crypto::X509Certificate Root(SimulationCoordinator()->GetRootCAFileName());
+
+            Context->useCertificate(Cert);
+            Context->addChainCertificate(Root);
+
+            Context->addCertificateAuthority(Root);
+
+            Poco::Crypto::RSAKey Key("", SimulationCoordinator()->GetKeyFileName(), "");
+            Context->usePrivateKey(Key);
+
+            SSL_CTX *SSLCtx = Context->sslContext();
+            if (!SSL_CTX_check_private_key(SSLCtx)) {
+                poco_error(Client->Logger_,fmt::format("Wrong Certificate: {} for {}",SimulationCoordinator()->GetCertFileName() ,
+                                                       SimulationCoordinator()->GetKeyFileName()));
+            }
+
+            SSL_CTX_set_verify(SSLCtx, SSL_VERIFY_NONE, always_accept_cert);
+            Context->enableExtendedCertificateVerification(false);
+
+            Client->Logger_.information(fmt::format("EstablishConnection({}): security level={}", Client->SerialNumber_, level));
+
+            std::lock_guard ClientGuard(Client->Mutex_);
+
+            Client->Logger_.information(fmt::format("Connecting({}): host={} port={}", Client->SerialNumber_,
+                                            uri.getHost(), uri.getPort()));
+
+            Poco::Net::SecureStreamSocket sock(Context);
+            sock.setLazyHandshake(true);
+            sock.connect(Poco::Net::SocketAddress(uri.getHost(), uri.getPort()));
+            sock.setPeerHostName("");
+            sock.completeHandshake();
+            Poco::Net::HTTPClientSession Session(sock);
+            Poco::Net::HTTPRequest Request(Poco::Net::HTTPRequest::HTTP_GET, "/?encoding=text",
+                                           Poco::Net::HTTPMessage::HTTP_1_1);
+            Request.set("origin", "http://www.websocket.org");
+            Poco::Net::HTTPResponse Response;
+
             Client->WS_ = std::make_unique<Poco::Net::WebSocket>(Session, Request, Response);
             (*Client->WS_).setReceiveTimeout(Poco::Timespan(1200,0));
             (*Client->WS_).setSendTimeout(Poco::Timespan(1200,0));
@@ -110,12 +105,12 @@ namespace OpenWifi::OWLSClientEvents {
             }
         } catch (const Poco::Exception &E) {
             Client->Logger_.warning(
-                    fmt::format("Connecting({}): exception. {}", Client->SerialNumber_, E.displayText()));
+                    fmt::format("EstablishConnection({}): exception. {}", Client->SerialNumber_, E.displayText()));
         } catch (const std::exception &E) {
             Client->Logger_.warning(
-                    fmt::format("Connecting({}): std::exception. {}", Client->SerialNumber_, E.what()));
+                    fmt::format("EstablishConnection({}): std::exception. {}", Client->SerialNumber_, E.what()));
         } catch (...) {
-            Client->Logger_.warning(fmt::format("Connecting({}): unknown exception. {}", Client->SerialNumber_));
+            Client->Logger_.warning(fmt::format("EstablishConnection({}): unknown exception.", Client->SerialNumber_));
         }
         Runner->Scheduler().in(std::chrono::seconds(Client->Backoff()), Reconnect, Client, Runner);
     }

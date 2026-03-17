@@ -56,7 +56,7 @@ namespace OpenWifi {
             ExistingSimulation.minAssociations > 4 ||
             ExistingSimulation.maxAssociations > 64 ||
             ExistingSimulation.minClients > 4 ||
-            ExistingSimulation.maxAssociations > 16 ||
+            ExistingSimulation.maxClients > 16 ||
             ExistingSimulation.keepAlive <120 || ExistingSimulation.keepAlive>3000 ||
             ExistingSimulation.reconnectInterval <10 || ExistingSimulation.reconnectInterval>300 ||
             ExistingSimulation.concurrentDevices < 1 || ExistingSimulation.concurrentDevices >1000 ||
