@@ -4,5 +4,9 @@
   "devices": 5,
   "gateway": "https://owls.kinsights.io:15002",
   "macPrefix": "030000",
-  "simulationLength": 600
+  "simulationLength": 600,
+  "minAssociations": 3,
+  "maxAssociations": 15,
+  "minClients": 3,
+  "maxClients": 30
 }
