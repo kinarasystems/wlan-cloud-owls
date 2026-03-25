@@ -14,6 +14,7 @@ echo "Starting OWLS: gateway=$GATEWAY_HOST ($GATEWAY_IP)"
 
 docker run \
     -p 16007:16007 -p 17007:17007 -p 16107:16107 \
+    --ulimit nofile=65536:65536 \
     -e TEMPLATE_CONFIG=true \
     -e RUN_CHOWN=true \
     -e KAFKA_ENABLE=false \
