@@ -38,7 +38,7 @@ namespace OpenWifi {
         std::uint64_t ReactorIndex=0;
 		for (uint64_t i = 0; i < Details_.devices; i++) {
 			char Buffer[32];
-			snprintf(Buffer, sizeof(Buffer), "%s%05x0", Details_.macPrefix.c_str(), (unsigned int)i);
+			snprintf(Buffer, sizeof(Buffer), "%s%06x", Details_.macPrefix.c_str(), (unsigned int)i);
 			auto Client = std::make_shared<OWLSclient>(Buffer, Logger_, this, *SocketReactorPool_[ReactorIndex++ % NumberOfReactors_]);
             Client->SerialNumber_ = Buffer;
             Client->Valid_ = true;
