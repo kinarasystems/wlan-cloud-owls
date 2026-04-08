@@ -202,7 +202,7 @@ namespace OpenWifi {
                             ProcessCommand(Guard,client, Frame);
                         } else {
                             Logger_.warning(
-                                    fmt::format("MESSAGE({}): invalid incoming message.", client->SerialNumber_));
+                                    fmt::format("MESSAGE({}): invalid incoming message: {}", client->SerialNumber_, IncomingFrame));
                         }
                     }
                 } break;

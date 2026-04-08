@@ -8,5 +8,7 @@
   "minAssociations": 3,
   "maxAssociations": 16,
   "minClients": 3,
-  "maxClients": 15
+  "maxClients": 15,
+  "stateInterval": 30,
+  "healthCheckInterval": 30
 }

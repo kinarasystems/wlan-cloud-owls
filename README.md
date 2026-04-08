@@ -19,5 +19,6 @@ simulatorid = 53494d010101
 Make sure you restart your gateway afterwards.
 
 ## The OWLS UI
-Using the OWLS UI, you cana create simulation definitions, and then run a live simulation based on the definition. You will need to know the public address for your gateway. It should look like https://openwifi.myispname.com:15002.
+Using the OWLS UI, you can create simulation definitions, and then run a live simulation based on the definition. You will need to know the public address for your gateway. It should look like https://openwifi.myispname.com:15002.
+
 
